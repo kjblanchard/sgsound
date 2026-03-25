@@ -8,8 +8,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 const char* cDatafile = "/tmp/test.sg";
-const char* cBgmFilename = "./test.ogg";
-const char* cSfxFilename = "./testsfx.ogg";
+const char* cBgmFilename = "test.ogg";
+const char* cSfxFilename = "testsfx.ogg";
 const bool useStream = true;
 
 static int numPlayedSfx = 0;
