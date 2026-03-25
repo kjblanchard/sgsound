@@ -7,7 +7,9 @@
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
-const char* cDatafile = "/tmp/test.sg";
+
+const int cMaxSFXPlays = 100;
+const char* cDatafile = "test.sg";
 const char* cBgmFilename = "test.ogg";
 const char* cSfxFilename = "testsfx.ogg";
 const bool useStream = true;
@@ -46,7 +48,7 @@ int main() {
 	SetBgmTrackImpl(0);
 	if (!useStream) LoadBgmFImpl(cBgmFilename, 1.0, -1);
 	PlayBgmImpl();
-	while (numPlayedSfx < 3) {
+	while (numPlayedSfx < cMaxSFXPlays) {
 		AudioUpdateImpl();
 		// 10ms
 		usleep(10000);
