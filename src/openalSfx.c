@@ -1,7 +1,7 @@
 #include <AL/al.h>
 #include <AL/alc.h>
-#include <sgsound/openalMemoryStream.h>
 #include <assert.h>
+#include <sgsound/openalMemoryStream.h>
 #include <sgtools/log.h>
 #include <stdbool.h>
 #include <string.h>
@@ -27,10 +27,9 @@ typedef struct {
 
 static SfxCacheEntry sSfxCache[MAX_SFX_CACHE];
 static int sSfxCacheCount = 0;
-
 static ALuint sALSfxSources[MAX_SFX_STREAMS];
 
-static int findEvictionIndex(void) {
+static int findOldest(void) {
 	unsigned long oldest = (unsigned long)-1;
 	int oldestIndex = 0;
 	for (int i = 0; i < sSfxCacheCount; i++) {
@@ -65,13 +64,12 @@ static Sfx* findCachedSfx(const char* filename) {
 static void addToCache(const char* filename, Sfx* sfx) {
 	int index = sSfxCacheCount;
 	if (sSfxCacheCount >= MAX_SFX_CACHE) {
-		index = findEvictionIndex();
+		index = findOldest();
 		free(sSfxCache[index].Name);
 		free(sSfxCache[index].SfxData.Data);
 	} else {
-		sSfxCacheCount++;
+		++sSfxCacheCount;
 	}
-
 	SfxCacheEntry* entry = &sSfxCache[index];
 	entry->Name = strdup(filename);
 	entry->SfxData = *sfx;
@@ -99,12 +97,12 @@ static Sfx* loadSfx(const char* filename, char* buf, size_t sz) {
 	Sfx newSfx = {0};
 	vorbis_info* info;
 	info = ov_info(&vf, -1);
-	if (info->channels == 1)
+	if (info->channels == 1) {
 		newSfx.Format = AL_FORMAT_MONO16;
-	else if (info->channels == 2)
+	} else if (info->channels == 2) {
 		newSfx.Format = AL_FORMAT_STEREO16;
-	else {
-		fprintf(stderr, "Unsupported channel count %d in '%s'", info->channels, filename);
+	} else {
+		sgLogError("Unsupported channel count %d in %s", info->channels, filename);
 		ov_clear(&vf);
 		return NULL;
 	}
@@ -152,7 +150,7 @@ void SfxPlayOneShotF(const char* filename, float volume) {
 }
 
 void SfxPlayOneShot(const char* filename, float volume, char* buf, size_t sz) {
-	Sfx* snd = loadSfx(filename, buf, sz);
-	if (!snd) return;
-	playSfx(snd, volume);
+	Sfx* s = loadSfx(filename, buf, sz);
+	if (!s) return;
+	playSfx(s, volume);
 }

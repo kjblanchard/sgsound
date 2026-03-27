@@ -1,8 +1,9 @@
 #include <AL/al.h>
-#include <sgsound/openalBgm.h>
-#include <sgsound/openalMemoryStream.h>
 #include <assert.h>
 #include <ogg/ogg.h>
+#include <sgsound/openalBgm.h>
+#include <sgsound/openalMemoryStream.h>
+#include <sgtools/log.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,7 +11,6 @@
 Bgm* BgmNew(void) {
 	Bgm* bgm = malloc(sizeof(*bgm));
 	bgm->VorbisFile = malloc(sizeof(*bgm->VorbisFile));
-	// Maybe we set it to null?
 	bgm->VorbisInfo = NULL;
 	bgm->Filename = NULL;
 	bgm->LoopStart = bgm->LoopEnd = bgm->Loops = 0;
@@ -23,7 +23,7 @@ static void getLoopPointsFromVorbisComments(Bgm* bgm, double* loopBegin, double*
 	assert(bgm && "No bgm!");
 	vorbis_comment* vc = ov_comment(bgm->VorbisFile, -1);
 	if (!vc) {
-		printf("Error retrieving vorbis comments for , setting to 0");
+		sgLogError("Error retrieving vorbis comments for bgm %s , setting to 0", bgm->Filename);
 		*loopBegin = *loopEnd = 0;
 		return;
 	}
@@ -48,20 +48,17 @@ static void setBgmLoopPoints(Bgm* bgm) {
 	if (bgm->Loops != 0) {
 		getLoopPointsFromVorbisComments(bgm, &loopBegin, &loopEnd);
 	}
-	if (loopBegin >= loopEnd) {
-		loopEnd = 0;
-	}
 	bgm->LoopStart = loopBegin > 0 ? (int64_t)(loopBegin * bgm->VorbisInfo->rate)
 								   : ov_pcm_tell(bgm->VorbisFile);
 	// Loop end needs to be measured against our buffers loading,
 	//	so they will be multiplied by channels and sizeof,Due to us checking
 	// this on every step.
-	if (loopEnd && loopEnd > 0) {
+	loopEnd = loopBegin >= loopEnd ? 0 : loopEnd;
+	if (loopEnd > 0) {
 		int64_t samplesOffset = (int64_t)(loopEnd * bgm->VorbisInfo->rate);
 		bgm->LoopEnd = samplesOffset * bgm->VorbisInfo->channels * sizeof(short);
 	} else {
-		bgm->LoopEnd = ov_pcm_total(bgm->VorbisFile, -1) *
-					   bgm->VorbisInfo->channels * sizeof(short);
+		bgm->LoopEnd = ov_pcm_total(bgm->VorbisFile, -1) * bgm->VorbisInfo->channels * sizeof(short);
 	}
 }
 
@@ -77,12 +74,14 @@ void BgmLoad(Bgm* bgm, const char* buffer, size_t bufferSize) {
 		return;
 	}
 	bgm->VorbisInfo = ov_info(bgm->VorbisFile, -1);
-	if (bgm->VorbisInfo->channels == 1)
+	if (bgm->VorbisInfo->channels == 1) {
 		bgm->Format = AL_FORMAT_MONO16;
-	else
+
+	} else {
 		bgm->Format = AL_FORMAT_STEREO16;
+	}
 	if (!bgm->Format) {
-		fprintf(stderr, "Unsupported channel count: %d\n", bgm->VorbisInfo->channels);
+		sgLogError("Unsupported channel count: %d\n", bgm->VorbisInfo->channels);
 		ov_clear(bgm->VorbisFile);
 		free(stream);
 		return;
