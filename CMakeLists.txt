@@ -214,6 +214,17 @@ if(NOT EMSCRIPTEN AND NOT LIB_OPENAL)
     target_link_libraries(${LIBRARY_TARGET_NAME} PUBLIC OpenAL)
 endif(NOT EMSCRIPTEN AND NOT LIB_OPENAL)
 
+if(NOT SYSTEM_PACKAGES AND NOT TARGET sgtools)
+  message(STATUS "fetching sgtools")
+  FetchContent_Declare(
+    sgtools
+    GIT_REPOSITORY https://github.com/kjblanchard/sgtools.git
+    GIT_TAG master)
+  FetchContent_MakeAvailable(sgtools)
+target_link_libraries(${LIBRARY_TARGET_NAME} PUBLIC sgtools)
+endif()
+
+
 target_compile_options(${LIBRARY_TARGET_NAME} PUBLIC ${COMPILE_OPTIONS})
 target_link_directories(${LIBRARY_TARGET_NAME} PUBLIC /usr/local/lib) # should always include from usr/local/lib
 target_link_libraries(${LIBRARY_TARGET_NAME} PUBLIC ${EXTERNAL_LIBS})
