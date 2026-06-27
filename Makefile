@@ -6,7 +6,7 @@ install:
 
 rebuild: clean
 	@mkdir build
-	@cmake -DCMAKE_BUILD_TYPE=Debug -B build .
+	@cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -B build .
 	@cmake --build build
 	@$(MAKE) run
 
