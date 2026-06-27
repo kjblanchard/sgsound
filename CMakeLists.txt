@@ -221,8 +221,10 @@ if(NOT SYSTEM_PACKAGES AND NOT TARGET sgtools)
     GIT_REPOSITORY https://github.com/kjblanchard/sgtools.git
     GIT_TAG master)
   FetchContent_MakeAvailable(sgtools)
-target_link_libraries(${LIBRARY_TARGET_NAME} PUBLIC sgtools)
 endif()
+if(TARGET sgtools)
+    target_link_libraries(${LIBRARY_TARGET_NAME} PUBLIC sgtools)
+endif(TARGET sgtools)
 
 
 target_compile_options(${LIBRARY_TARGET_NAME} PUBLIC ${COMPILE_OPTIONS})
