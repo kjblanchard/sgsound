@@ -4,6 +4,7 @@
 #include <sgsound/openalBgm.h>
 #include <sgsound/openalMemoryStream.h>
 #include <sgtools/log.h>
+#include <sgtools/tools.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
