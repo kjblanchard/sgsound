@@ -11,7 +11,7 @@ message(STATUS "Starting ${LIBRARY_TARGET_NAME} initialization")
 set(COMPILE_OPTIONS)
 set(EXTERNAL_LIBS)
 # Should we show everything, or just a few.
-set(CMAKE_INSTALL_MESSAGE LAZY)
+# set(CMAKE_INSTALL_MESSAGE LAZY)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build libraries as static" FORCE)
@@ -236,10 +236,10 @@ target_include_directories(
     PRIVATE # linux builds
     ${lib_ogg_SOURCE_DIR}/include ${lib_ogg_BINARY_DIR}/include)
 
-target_include_directories(${LIBRARY_TARGET_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(${LIBRARY_TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 if(INSTALL_THE_LIB)
     install(TARGETS ${LIBRARY_TARGET_NAME} ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
-    install(DIRECTORY ./include/ DESTINATION include)
+    install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/sgsound DESTINATION include)
 endif()
 
