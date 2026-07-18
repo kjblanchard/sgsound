@@ -5,6 +5,8 @@ option(BUILD_TEST "Test executable" OFF)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(DEBUG_ASAN OFF)
+
 set(LIBRARY_TARGET_NAME sgsound)
 project(${LIBRARY_TARGET_NAME} LANGUAGES C CXX VERSION 1.0)
 message(STATUS "Starting ${LIBRARY_TARGET_NAME} initialization")
@@ -18,18 +20,6 @@ set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build libraries as static" FORCE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(FetchContent)
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  if(NOT (APPLE AND (CMAKE_SYSTEM_NAME STREQUAL "iOS" OR CMAKE_SYSTEM_NAME STREQUAL "iossimulator")) AND NOT (CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
-    message(STATUS "Enabling AddressSanitizer in Debug mode")
-    set(ASAN_FLAGS "-fsanitize=address -fno-omit-frame-pointer")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ASAN_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ASAN_FLAGS}")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ASAN_FLAGS}")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ASAN_FLAGS}")
-  endif()
-endif()
-
-
 # Build system Specific
 if(CMAKE_GENERATOR STREQUAL "Xcode")
     message(STATUS "Setting Build to Universal Binary")
@@ -37,6 +27,7 @@ if(CMAKE_GENERATOR STREQUAL "Xcode")
         "x86_64;arm64"
         CACHE STRING "" FORCE)
 endif(CMAKE_GENERATOR STREQUAL "Xcode")
+
 if(DEBUG_ASAN AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     if(NOT (APPLE AND (CMAKE_SYSTEM_NAME STREQUAL "iOS" OR CMAKE_SYSTEM_NAME STREQUAL "iossimulator")) AND NOT (CMAKE_SYSTEM_NAME STREQUAL "Emscripten"))
         message(STATUS "Enabling AddressSanitizer in Debug mode")
@@ -241,7 +232,7 @@ target_include_directories(
 target_include_directories(${LIBRARY_TARGET_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 if(INSTALL_THE_LIB)
-    install(TARGETS ${LIBRARY_TARGET_NAME} ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+    install(TARGETS ${LIBRARY_TARGET_NAME} sgsound ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
     install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/sgsound DESTINATION include)
 endif()
 
