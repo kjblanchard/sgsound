@@ -39,7 +39,8 @@ static bool initializeAL(void) {
 	if (!device)
 		device = alcOpenDevice(NULL);
 	if (!device) {
-		fprintf(stderr, "Could not open a device!\n");
+		int result = alGetError();
+		sgLogCritical("Could not open sound device, AL error: %d", result);
 		return false;
 	}
 	ctx = alcCreateContext(device, NULL);
@@ -47,7 +48,8 @@ static bool initializeAL(void) {
 		if (ctx != NULL)
 			alcDestroyContext(ctx);
 		alcCloseDevice(device);
-		fprintf(stderr, "Could not set a context!\n");
+		int result = alGetError();
+		sgLogCritical("Could not set AL context, %d", result);
 		return false;
 	}
 	name = NULL;
