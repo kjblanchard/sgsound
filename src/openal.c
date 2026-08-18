@@ -36,12 +36,41 @@ static bool initializeAL(void) {
 	ALCdevice* device;
 	ALCcontext* ctx;
 	device = NULL;
-	if (!device)
-		device = alcOpenDevice(NULL);
 	if (!device) {
-		int result = alGetError();
-		sgLogCritical("Could not open sound device, AL error: %d", result);
-		return false;
+		ALCenum error = alcGetError(NULL);
+
+		sgLogCritical(
+			"Could not open default sound device: %d (0x%04X): %s",
+			error,
+			error,
+			alcGetString(NULL, error));
+		// Try enumerating all available playback devices.
+		const ALCchar* devices = NULL;
+
+		if (alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT")) {
+			devices = alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
+		} else {
+			devices = alcGetString(NULL, ALC_DEVICE_SPECIFIER);
+		}
+		if (devices) {
+			for (const ALCchar* deviceName = devices;
+				 *deviceName != '\0';
+				 deviceName += strlen(deviceName) + 1) {
+				sgLogDebug("Trying OpenAL device: %s", deviceName);
+				device = alcOpenDevice(deviceName);
+				if (device) {
+					sgLogDebug("Successfully opened OpenAL device: %s", deviceName);
+					break;
+				}
+				error = alcGetError(NULL);
+				sgLogCritical(
+					"Could not open OpenAL device '%s': %d (0x%04X): %s",
+					deviceName,
+					error,
+					error,
+					alcGetString(NULL, error));
+			}
+		}
 	}
 	ctx = alcCreateContext(device, NULL);
 	if (ctx == NULL || alcMakeContextCurrent(ctx) == ALC_FALSE) {
