@@ -39,7 +39,7 @@ static bool initializeAL(void) {
 	if (!device) {
 		ALCenum error = alcGetError(NULL);
 
-		sgLogCritical(
+		sgLogWarn(
 			"Could not open default sound device: %d (0x%04X): %s",
 			error,
 			error,
@@ -63,7 +63,7 @@ static bool initializeAL(void) {
 					break;
 				}
 				error = alcGetError(NULL);
-				sgLogCritical(
+				sgLogError(
 					"Could not open OpenAL device '%s': %d (0x%04X): %s",
 					deviceName,
 					error,
@@ -71,6 +71,9 @@ static bool initializeAL(void) {
 					alcGetString(NULL, error));
 			}
 		}
+	}
+	if (!device) {
+		sgLogCritical("Could not start any devices, exiting!");
 	}
 	ctx = alcCreateContext(device, NULL);
 	if (ctx == NULL || alcMakeContextCurrent(ctx) == ALC_FALSE) {
