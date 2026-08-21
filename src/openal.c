@@ -16,6 +16,7 @@
 static unsigned int sCurrentStreamID = 0;
 static Stream* sStreams[MAX_STREAMS];
 static float sGlobalBgmVolume = 1.0;
+static bool sSoundEnabled = false;
 
 typedef struct BgmLoadArgs {
 	char* Name;
@@ -39,14 +40,9 @@ static bool initializeAL(void) {
 	if (!device) {
 		ALCenum error = alcGetError(NULL);
 
-		sgLogWarn(
-			"Could not open default sound device: %d (0x%04X): %s",
-			error,
-			error,
-			alcGetString(NULL, error));
+		sgLogWarn("Could not open default sound device: %d (0x%04X): %s", error, error, alcGetString(NULL, error));
 		// Try enumerating all available playback devices.
 		const ALCchar* devices = NULL;
-
 		if (alcIsExtensionPresent(NULL, "ALC_ENUMERATE_ALL_EXT")) {
 			devices = alcGetString(NULL, ALC_ALL_DEVICES_SPECIFIER);
 		} else {
@@ -63,17 +59,12 @@ static bool initializeAL(void) {
 					break;
 				}
 				error = alcGetError(NULL);
-				sgLogError(
-					"Could not open OpenAL device '%s': %d (0x%04X): %s",
-					deviceName,
-					error,
-					error,
-					alcGetString(NULL, error));
+				sgLogWarn("Could not open OpenAL device '%s': %d (0x%04X): %s", deviceName, error, error, alcGetString(NULL, error));
 			}
 		}
 	}
 	if (!device) {
-		sgLogCritical("Could not start any devices, exiting!");
+		sgLogError("Could not start any devices game will play without sound");
 	}
 	ctx = alcCreateContext(device, NULL);
 	if (ctx == NULL || alcMakeContextCurrent(ctx) == ALC_FALSE) {
@@ -95,8 +86,10 @@ static bool initializeAL(void) {
 
 void InitializeAudioImpl(void) {
 	bool result = initializeAL();
-	if (!result) {
-		sgLogCritical("Could not load audio system!");
+	if (result) {
+		sSoundEnabled = true;
+	} else {
+		return;
 	}
 	for (int i = 0; i < MAX_STREAMS; ++i) {
 		sStreams[i] = StreamNew();
@@ -143,6 +136,7 @@ static void loadBgmInternalFile(BgmLoadArgs* args, const char* fullPath) {
 }
 
 void LoadBgmImpl(const char* filename, char* data, size_t dataSize, float volume, int loops) {
+	if (!sSoundEnabled) return;
 	AudioBgmAsset* bgmAsset = &sBgmAssets[sCurrentStreamID];
 	if (bgmAsset->BgmPtr && bgmAsset->BgmPtr->Filename &&
 		strcmp(bgmAsset->BgmPtr->Filename, filename) == 0) {
@@ -161,6 +155,7 @@ void LoadBgmImpl(const char* filename, char* data, size_t dataSize, float volume
 }
 
 void LoadBgmFImpl(const char* filename, float volume, int loops) {
+	if (!sSoundEnabled) return;
 	AudioBgmAsset* bgmAsset = &sBgmAssets[sCurrentStreamID];
 	if (bgmAsset->BgmPtr && bgmAsset->BgmPtr->Filename &&
 		strcmp(bgmAsset->BgmPtr->Filename, filename) == 0) {
@@ -179,6 +174,7 @@ void LoadBgmFImpl(const char* filename, float volume, int loops) {
 }
 
 void PlayBgmImpl(void) {
+	if (!sSoundEnabled) return;
 	UpdatePlayingBgmVolumeImpl();
 	StreamPlay(sStreams[sCurrentStreamID]);
 }
@@ -186,12 +182,14 @@ void PlayBgmImpl(void) {
 void PauseBgmImpl(void) {}
 
 void StopBgmImpl(void) {
+	if (!sSoundEnabled) return;
 	if (!sStreams[sCurrentStreamID])
 		return;
 	StreamStop(sStreams[sCurrentStreamID]);
 }
 
 void UpdatePlayingBgmVolumeImpl(void) {
+	if (!sSoundEnabled) return;
 	for (size_t i = 0; i < MAX_STREAMS; i++) {
 		if (!sBgmAssets[i].BgmPtr)
 			continue;
@@ -201,19 +199,23 @@ void UpdatePlayingBgmVolumeImpl(void) {
 }
 
 void SetGlobalBgmVolumeImpl(float volume) {
+	if (!sSoundEnabled) return;
 	sGlobalBgmVolume = volume;
 	UpdatePlayingBgmVolumeImpl();
 }
 
 void SetGlobalSfxVolumeImpl(float volume) {}
 void PlaySfxOneShotFImpl(const char* name, float volume) {
+	if (!sSoundEnabled) return;
 	SfxPlayOneShotF(name, volume);
 }
 void PlaySfxOneShotImpl(const char* name, float volume, char* buf, size_t sz) {
+	if (!sSoundEnabled) return;
 	SfxPlayOneShot(name, volume, buf, sz);
 }
 
 void CloseAudioImpl(void) {
+	if (!sSoundEnabled) return;
 	for (int i = 0; i < MAX_STREAMS; ++i) {
 		AudioBgmAsset* asset = &sBgmAssets[i];
 		BgmDelete(asset->BgmPtr);
@@ -221,6 +223,7 @@ void CloseAudioImpl(void) {
 }
 
 void AudioUpdateImpl(void) {
+	if (!sSoundEnabled) return;
 	for (int i = 0; i < MAX_STREAMS; ++i) {
 		if (!sBgmAssets[i].BgmPtr)
 			continue;

@@ -11,6 +11,7 @@
 #define VORBIS_READ_SIZE 4096
 
 static unsigned long sUsedCounter = 0;
+static bool sSfxInitialized = false;
 
 typedef struct Sfx {
 	ALenum Format;
@@ -49,6 +50,7 @@ void InitializeSfxSystem(void) {
 		alSourcei(sALSfxSources[i], AL_SOURCE_RELATIVE, AL_TRUE);
 		alSourcei(sALSfxSources[i], AL_ROLLOFF_FACTOR, 0);
 	}
+	sSfxInitialized = true;
 }
 
 static Sfx* findCachedSfx(const char* filename) {
@@ -144,12 +146,14 @@ static void playSfx(Sfx* snd, float volume) {
 }
 
 void SfxPlayOneShotF(const char* filename, float volume) {
+	if (!sSfxInitialized) return;
 	Sfx* snd = loadSfx(filename, NULL, 0);
 	if (!snd) return;
 	playSfx(snd, volume);
 }
 
 void SfxPlayOneShot(const char* filename, float volume, char* buf, size_t sz) {
+	if (!sSfxInitialized) return;
 	Sfx* s = loadSfx(filename, buf, sz);
 	if (!s) return;
 	playSfx(s, volume);
