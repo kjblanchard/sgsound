@@ -37,9 +37,9 @@ static bool initializeAL(void) {
 	ALCdevice* device;
 	ALCcontext* ctx;
 	device = NULL;
+  device = alcOpenDevice(NULL);
 	if (!device) {
 		ALCenum error = alcGetError(NULL);
-
 		sgLogWarn("Could not open default sound device: %d (0x%04X): %s", error, error, alcGetString(NULL, error));
 		// Try enumerating all available playback devices.
 		const ALCchar* devices = NULL;
