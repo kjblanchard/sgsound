@@ -64,6 +64,7 @@ if(UNIX OR APPLE)
         -Wnull-dereference
         -Wdouble-promotion
         -Wformat=2
+        -Wno-error=function-effects
     )
 
 endif(UNIX OR APPLE)
@@ -195,11 +196,11 @@ if(NOT EMSCRIPTEN AND NOT LIB_OPENAL)
     set(ALSOFT_EMBED_HRTF_DATA
         ON
         CACHE INTERNAL "")
-    # set(ALSOFT_REQUIRE_COREAUDIO ON CACHE INTERNAL "" )
+     set(ALSOFT_BACKEND_PORTAUDIO OFF CACHE INTERNAL "" )
     FetchContent_Declare(
         LIB_OPENAL
         GIT_REPOSITORY https://github.com/kcat/openal-soft
-        GIT_TAG 1.24.3
+        GIT_TAG 1.23.1
         EXCLUDE_FROM_ALL)
     FetchContent_MakeAvailable(LIB_OPENAL)
     target_link_libraries(${LIBRARY_TARGET_NAME} PUBLIC OpenAL)
